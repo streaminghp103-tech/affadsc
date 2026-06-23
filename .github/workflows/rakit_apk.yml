@@ -28,16 +28,20 @@ jobs:
         rm -rf android
         flutter create . --platforms=android --org com.example
 
-    - name: Suntik Konfigurasi SDK & Buka Gerbang Maven (Kombinasi Pemenang)
+    - name: Buka Gembok Keamanan Repositori & Set SDK (Kunci Utama FFmpeg)
       run: |
-        # 1. Atur minimum SDK ke 24 (Solusi Legal Anti-Error Java)
+        # 1. Atur minimum SDK ke 24
         echo "flutter.minSdkVersion=24" >> android/local.properties
         echo "flutter.targetSdkVersion=34" >> android/local.properties
         echo "flutter.compileSdkVersion=34" >> android/local.properties
         
-        # 2. Paksa mavenCentral() berdampingan dengan google() (Solusi Sukses FFmpeg Percobaan 12)
-        sed -i 's/google()/google(); mavenCentral()/g' android/build.gradle || true
-        sed -i 's/google()/google(); mavenCentral()/g' android/settings.gradle || true
+        # 2. Turunkan keamanan sistem Flutter 3.22 agar mengizinkan plugin mencari file di Maven
+        sed -i 's/RepositoriesMode.PREFER_SETTINGS/RepositoriesMode.PREFER_PROJECT/g' android/settings.gradle || true
+        sed -i 's/RepositoriesMode.FAIL_ON_PROJECT_REPOS/RepositoriesMode.PREFER_PROJECT/g' android/settings.gradle || true
+        
+        # 3. Suntikkan jalur unduhan Maven Central secara legal ke seluruh lini project
+        echo "" >> android/build.gradle
+        echo "allprojects { repositories { google(); mavenCentral() } }" >> android/build.gradle
 
     - name: Ambil Dependency Proyek
       run: flutter pub get
