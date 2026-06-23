@@ -28,17 +28,16 @@ jobs:
         rm -rf android
         flutter create . --platforms=android --org com.example
 
-    - name: Suntik Konfigurasi SDK & Buka Gerbang Maven (Anti-Error)
+    - name: Suntik Konfigurasi SDK & Buka Gerbang Maven (Kombinasi Pemenang)
       run: |
-        # 1. Atur minimum SDK ke 24 via file properties (Sangat Aman & Legal)
+        # 1. Atur minimum SDK ke 24 (Solusi Legal Anti-Error Java)
         echo "flutter.minSdkVersion=24" >> android/local.properties
         echo "flutter.targetSdkVersion=34" >> android/local.properties
         echo "flutter.compileSdkVersion=34" >> android/local.properties
         
-        # 2. Tambahkan pelacak mavenCentral di bagian paling bawah file konfigurasi utama
-        # Ini mengatasi gagal unduh FFmpeg tanpa menyenggol sedikit pun struktur Java/Kotlin di atasnya
-        echo "" >> android/build.gradle
-        echo "allprojects { repositories { google(); mavenCentral() } }" >> android/build.gradle
+        # 2. Paksa mavenCentral() berdampingan dengan google() (Solusi Sukses FFmpeg Percobaan 12)
+        sed -i 's/google()/google(); mavenCentral()/g' android/build.gradle || true
+        sed -i 's/google()/google(); mavenCentral()/g' android/settings.gradle || true
 
     - name: Ambil Dependency Proyek
       run: flutter pub get
