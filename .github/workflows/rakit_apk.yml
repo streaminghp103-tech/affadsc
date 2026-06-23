@@ -17,37 +17,29 @@ jobs:
         distribution: 'zulu'
         java-version: '17'
 
-    - name: Setup Flutter (Gunakan Versi Stabil Terbaru)
+    - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
         flutter-version: '3.22.x'
         channel: 'stable'
 
-    - name: Regenerasi Folder Android & Kunci Syarat SDK
+    - name: Operasi Transplantasi FFmpeg & Syarat Android
       run: |
+        # 1. Buat folder Android bersih
         rm -rf android
         flutter create . --platforms=android --org com.example
         
-        # Sembuhkan peringatan error "SDK version 34" dan "minSdkVersion 24"
+        # 2. Penuhi syarat Mutlak SDK secara legal
         sed -i 's/flutter.minSdkVersion/24/g' android/app/build.gradle
         sed -i 's/flutter.compileSdkVersion/34/g' android/app/build.gradle
         sed -i 's/flutter.targetSdkVersion/34/g' android/app/build.gradle
 
+        # 3. TRANSPLANTASI: Ganti plugin usang dengan versi utama yang sehat!
+        sed -i 's/ffmpeg_kit_flutter_video/ffmpeg_kit_flutter/g' pubspec.yaml
+        find lib -name "*.dart" -exec sed -i 's/ffmpeg_kit_flutter_video/ffmpeg_kit_flutter/g' {} +
+
     - name: Ambil Dependency Proyek
       run: flutter pub get
-
-    - name: Operasi Pembedahan Cache (Solusi Tuntas JCenter/Maven)
-      run: |
-        # 1. Buka gembok keamanan dari luar
-        sed -i 's/RepositoriesMode.FAIL_ON_PROJECT_REPOS/RepositoriesMode.PREFER_PROJECT/g' android/settings.gradle || true
-        sed -i 's/RepositoriesMode.PREFER_SETTINGS/RepositoriesMode.PREFER_PROJECT/g' android/settings.gradle || true
-        
-        echo "" >> android/build.gradle
-        echo "allprojects { repositories { google(); mavenCentral() } }" >> android/build.gradle
-
-        # 2. EKSEKUSI UTAMA: Cari semua plugin yang terunduh dan hapus jalur server zombie secara paksa
-        find $PUB_CACHE/hosted -name "build.gradle" -exec sed -i 's/jcenter()/mavenCentral()/g' {} +
-        find $PUB_CACHE/hosted -name "build.gradle" -exec sed -i 's/maven { url "https:\/\/jcenter.bintray.com" }/mavenCentral()/g' {} +
 
     - name: Compile Jadi APK Android
       run: flutter build apk --release --no-tree-shake-icons --target-platform android-arm64
