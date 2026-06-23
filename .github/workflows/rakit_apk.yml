@@ -23,111 +23,25 @@ jobs:
         flutter-version: '3.22.x'
         channel: 'stable'
 
-    - name: Generate Folder Android Otomatis
-      run: flutter create . --platforms=android
-
-    - name: Rekonstruksi Total Pengaturan Android (Kunci JVM 17)
+    - name: Buat Struktur Proyek Baru & Bersih
       run: |
-        # 1. Upgrade Versi Gradle Otomatis ke 8.4
-        sed -i 's/gradle-7.6.3-all.zip/gradle-8.4-all.zip/g' android/gradle/wrapper/gradle-wrapper.properties || true
-        sed -i 's/gradle-.*-all.zip/gradle-8.4-all.zip/g' android/gradle/wrapper/gradle-wrapper.properties || true
+        # Hapus folder android lama yang korup akibat modifikasi teks sebelumnya
+        rm -rf android
+        # Buat ulang folder Android resmi yang fresh dengan package name com.example.affadsc
+        flutter create . --platforms=android --org com.example
 
-        # 2. Tulis ulang file android/settings.gradle (Format Modern + Maven)
-        cat << 'EOF' > android/settings.gradle
-        pluginManagement {
-            def flutterSdkPath = {
-                def properties = new Properties()
-                def file = new File(settingsDir, "local.properties")
-                if (file.exists()) {
-                    file.withReader("UTF-8") { reader -> properties.load(reader) }
-                }
-                def sdkPath = properties.getProperty("flutter.sdk")
-                assert sdkPath != null, "flutter.sdk not set in local.properties"
-                return sdkPath
-            }()
-
-            includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
-
-            repositories {
-                google()
-                mavenCentral()
-                gradlePluginPortal()
-            }
-        }
-
-        plugins {
-            id "dev.flutter.flutter-gradle-plugin" version "1.0.0" apply false
-            id "com.android.application" version "8.3.2" apply false
-            id "org.jetbrains.kotlin.android" version "1.9.22" apply false
-        }
-
-        include ":app"
-        EOF
-
-        # 3. Tulis ulang file android/build.gradle (Paksa kompilator global ke Java 17)
-        cat << 'EOF' > android/build.gradle
-        allprojects {
-            repositories {
-                google()
-                mavenCentral()
-            }
-        }
-
-        rootProject.buildDir = '../build'
-        subprojects {
-            project.buildDir = "${rootProject.buildDir}/${project.name}"
-        }
-        subprojects {
-            project.evaluationDependsOn(':app')
-        }
-
-        tasks.register("clean", Delete) {
-            delete rootProject.buildDir
-        }
-        EOF
-
-        # 4. Tulis ulang file android/app/build.gradle (Kunci Mati Java 17 & minSdk 24)
-        cat << 'EOF' > android/app/build.gradle
-        plugins {
-            id "com.android.application"
-            id "kotlin-android"
-            id "dev.flutter.flutter-gradle-plugin"
-        }
-
-        android {
-            namespace "com.example.affadsc"
-            compileSdk 34
-
-            compileOptions {
-                sourceCompatibility JavaVersion.VERSION_17
-                targetCompatibility JavaVersion.VERSION_17
-            }
-
-            kotlin {
-                jvmToolchain(17)
-            }
-
-            defaultConfig {
-                applicationId "com.example.affadsc"
-                minSdk 24
-                targetSdk 34
-                versionCode 1
-                versionName "1.0.0"
-            }
-
-            buildTypes {
-                release {
-                    signingConfig signingConfigs.debug
-                }
-            }
-        }
-        EOF
+    - name: Konfigurasi Parameter SDK (Fix FFmpeg Tanpa Merusak File)
+      run: |
+        # Mengubah setelan minSdk secara legal langsung ke file local.properties atau gradle bawaan Flutter
+        echo "flutter.minSdkVersion=24" >> android/local.properties
+        echo "flutter.targetSdkVersion=34" >> android/local.properties
+        echo "flutter.compileSdkVersion=34" >> android/local.properties
 
     - name: Ambil Dependency Proyek
       run: flutter pub get
 
     - name: Compile Jadi APK Android
-      run: flutter build apk --release --no-tree-shake-icons
+      run: flutter build apk --release --no-tree-shake-icons --target-platform android-arm64
 
     - name: Simpan Hasil APK Akhir
       uses: actions/upload-artifact@v4
