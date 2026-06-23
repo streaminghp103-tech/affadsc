@@ -26,21 +26,13 @@ jobs:
     - name: Generate Folder Android Otomatis
       run: flutter create . --platforms=android
 
-    - name: Penyelarasan Total Java & Kotlin 17 (Solusi Permanen JVM)
+    - name: Rekonstruksi Total Pengaturan Android (Kunci JVM 17)
       run: |
-        # 1. Atur minSdkVersion ke 24 secara paksa di level aplikasi
-        sed -i 's/minSdkVersion .*/minSdkVersion 24/g' android/app/build.gradle
-        sed -i 's/flutter.minSdkVersion/24/g' android/app/build.gradle || true
-        
-        # 2. Upgrade Versi Gradle Otomatis ke 8.4 sesuai instruksi Android modern
+        # 1. Upgrade Versi Gradle Otomatis ke 8.4
         sed -i 's/gradle-7.6.3-all.zip/gradle-8.4-all.zip/g' android/gradle/wrapper/gradle-wrapper.properties || true
         sed -i 's/gradle-.*-all.zip/gradle-8.4-all.zip/g' android/gradle/wrapper/gradle-wrapper.properties || true
 
-        # 3. Suntikkan instruksi jvmToolchain(17) ke dalam android/app/build.gradle asli tanpa merusak package name
-        # Kita selipkan tepat di bawah blok "android {" bawaan asli Flutter
-        sed -i '/android {/a \    kotlin { jvmToolchain(17) }' android/app/build.gradle
-
-        # 4. Tulis ulang file android/settings.gradle dengan format Plugin baru + Jalur Maven
+        # 2. Tulis ulang file android/settings.gradle (Format Modern + Maven)
         cat << 'EOF' > android/settings.gradle
         pluginManagement {
             def flutterSdkPath = {
@@ -72,7 +64,7 @@ jobs:
         include ":app"
         EOF
 
-        # 5. Tulis ulang file android/build.gradle secara global
+        # 3. Tulis ulang file android/build.gradle (Paksa kompilator global ke Java 17)
         cat << 'EOF' > android/build.gradle
         allprojects {
             repositories {
@@ -91,6 +83,43 @@ jobs:
 
         tasks.register("clean", Delete) {
             delete rootProject.buildDir
+        }
+        EOF
+
+        # 4. Tulis ulang file android/app/build.gradle (Kunci Mati Java 17 & minSdk 24)
+        cat << 'EOF' > android/app/build.gradle
+        plugins {
+            id "com.android.application"
+            id "kotlin-android"
+            id "dev.flutter.flutter-gradle-plugin"
+        }
+
+        android {
+            namespace "com.example.affadsc"
+            compileSdk 34
+
+            compileOptions {
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
+            }
+
+            kotlin {
+                jvmToolchain(17)
+            }
+
+            defaultConfig {
+                applicationId "com.example.affadsc"
+                minSdk 24
+                targetSdk 34
+                versionCode 1
+                versionName "1.0.0"
+            }
+
+            buildTypes {
+                release {
+                    signingConfig signingConfigs.debug
+                }
+            }
         }
         EOF
 
