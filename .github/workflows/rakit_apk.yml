@@ -26,48 +26,22 @@ jobs:
     - name: Generate Folder Android Otomatis
       run: flutter create . --platforms=android
 
-    - name: Suntik Batas SDK & Server Unduhan (Solusi Akurat FFmpeg)
+    - name: Suntik Pengaturan Maven & SDK (Aman & Presisi)
       run: |
         # 1. Pastikan batas minimum Android SDK diatur ke 24
         sed -i 's/minSdkVersion .*/minSdkVersion 24/g' android/app/build.gradle
         sed -i 's/flutter.minSdkVersion/24/g' android/app/build.gradle || true
         
-        # 2. Tambahkan mavenCentral() ke dalam settings.gradle agar plugin bisa mengunduh FFmpeg
-        cat << 'EOF' > android/settings.gradle
-        pluginManagement {
-            def flutterSdkPath = {
-                def properties = new Properties()
-                def file = new File(settingsDir, "local.properties")
-                if (file.exists()) {
-                    file.withReader("UTF-8") { reader -> properties.load(reader) }
-                }
-                def sdkPath = properties.getProperty("flutter.sdk")
-                assert sdkPath != null, "flutter.sdk not set in local.properties"
-                return sdkPath
-            }()
+        # 2. Suntikkan mavenCentral() ke dalam antarmuka pencarian plugin tanpa merusak struktur asli
+        sed -i '/google()/a \        mavenCentral()' android/settings.gradle
+        
+        # 3. Tambahkan aturan pencarian dependency cadangan langsung di level aplikasi
+        cat << 'EOF' >> android/app/build.gradle
 
-            includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
-
-            repositories {
-                google()
-                mavenCentral()
-                gradlePluginPortal()
-            }
+        repositories {
+            google()
+            mavenCentral()
         }
-
-        plugins {
-            id "dev.flutter.flutter-gradle-plugin" version "1.0.0" apply false
-        }
-
-        dependencyResolutionManagement {
-            repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
-            repositories {
-                google()
-                mavenCentral()
-            }
-        }
-
-        include ":app"
         EOF
 
     - name: Ambil Dependency Proyek
