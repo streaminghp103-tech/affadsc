@@ -23,26 +23,19 @@ jobs:
         flutter-version: '3.22.x'
         channel: 'stable'
 
-    - name: Operasi Transplantasi FFmpeg & Syarat Android
+    - name: Cabut Modul FFmpeg & Bersihkan Pondasi (Plan B)
       run: |
-        # 1. Buat folder Android bersih
         rm -rf android
         flutter create . --platforms=android --org com.example
         
-        # 2. Penuhi syarat Mutlak SDK secara legal
-        sed -i 's/flutter.minSdkVersion/24/g' android/app/build.gradle
-        sed -i 's/flutter.compileSdkVersion/34/g' android/app/build.gradle
-        sed -i 's/flutter.targetSdkVersion/34/g' android/app/build.gradle
-
-        # 3. TRANSPLANTASI: Ganti plugin usang dengan versi utama yang sehat!
-        sed -i 's/ffmpeg_kit_flutter_video/ffmpeg_kit_flutter/g' pubspec.yaml
-        find lib -name "*.dart" -exec sed -i 's/ffmpeg_kit_flutter_video/ffmpeg_kit_flutter/g' {} +
+        # Hapus secara otomatis plugin usang yang menyebabkan error 26 kali
+        sed -i '/ffmpeg_kit_flutter/d' pubspec.yaml
 
     - name: Ambil Dependency Proyek
       run: flutter pub get
 
     - name: Compile Jadi APK Android
-      run: flutter build apk --release --no-tree-shake-icons --target-platform android-arm64
+      run: flutter build apk --release --no-tree-shake-icons
 
     - name: Simpan Hasil APK Akhir
       uses: actions/upload-artifact@v4
