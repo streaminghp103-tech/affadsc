@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:ffmpeg_kit_flutter_video/ffmpeg_kit.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:io';
 import 'dart:convert';
@@ -18,7 +17,7 @@ class AutoAffiliateAndroid extends StatefulWidget {
 class _AutoAffiliateAndroidState extends State<AutoAffiliateAndroid> {
   final _apiController = TextEditingController();
   String? _selectedVideoPath;
-  String _statusLog = "Status: Siap memproses video.";
+  String _statusLog = "Status: Siap memproses video dengan AI Gemini.";
   bool _isProcessing = false;
 
   Future<void> _pilihVideo() async {
@@ -57,31 +56,17 @@ class _AutoAffiliateAndroidState extends State<AutoAffiliateAndroid> {
       
       final dataAi = jsonDecode(response.text!.replaceAll("```json", "").replaceAll("```", "").trim());
       String judulSEO = dataAi['judul'];
+      String naskahVO = dataAi['naskah'];
       
-      setState(() => _statusLog = "AI Selesai menganalisis! Memulai proses rendering video... Mohon tunggu karena proses ini memakan waktu beberapa menit di background.");
-
-      String outputPath = _selectedVideoPath!.replaceAll(".mp4", "_matang_SEO.mp4");
-      String ffmpegCommand = "-i $_selectedVideoPath -vf \"hflip,setpts=0.95*PTS\" -an -ss 00:00:00.5 $outputPath";
-
-      await FFmpegKit.execute(ffmpegCommand).then((session) async {
-        final returnCode = await session.getReturnCode();
-        if (returnCode!.isValueSuccess()) {
-          setState(() {
-            _isProcessing = false;
-            _statusLog = "SUKSES! Video siap di-upload: $outputPath\n\nJudul Konten: $judulSEO";
-          });
-        } else {
-          setState(() {
-            _isProcessing = false;
-            _statusLog = "Gagal memproses video di internal sistem HP.";
-          });
-        }
+      setState(() {
+        _isProcessing = false;
+        _statusLog = "SUKSES!\n\nJudul Konten: $judulSEO\n\nNaskah VO: $naskahVO\n\n(Salin naskah ini untuk digunakan sebagai Voice Over di CapCut/Shopee Video).";
       });
 
     } catch (e) {
       setState(() {
         _isProcessing = false;
-        _statusLog = "Terjadi kegagalan sistem: $e";
+        _statusLog = "Terjadi kegagalan sistem AI: $e";
       });
     }
   }
@@ -110,26 +95,26 @@ class _AutoAffiliateAndroidState extends State<AutoAffiliateAndroid> {
               icon: Icon(Icons.video_collection),
               label: Text("AMBIL VIDEO MENTAH DOUYIN"),
               style: ElevatedButton.styleFrom(
-                minimumSize: Size(double.infinity, 50), // Perbaikan parameter tinggi tombol 1
+                minimumSize: Size(double.infinity, 50),
               ),
             ),
             SizedBox(height: 30),
             Container(
               padding: EdgeInsets.all(15),
               color: Colors.black45,
-              height: 150,
-              child: SingleChildScrollView(child: Text(_statusLog, style: TextStyle(fontFamily: 'monospace', color: Colors.green))),
+              height: 200,
+              child: SingleChildScrollView(child: SelectableText(_statusLog, style: TextStyle(fontFamily: 'monospace', color: Colors.green))),
             ),
             Spacer(),
             ElevatedButton(
               onPressed: _isProcessing ? null : _mulaiOtomatisasi,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
-                minimumSize: Size(double.infinity, 55), // Perbaikan parameter tinggi tombol 2
+                minimumSize: Size(double.infinity, 55),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
               child: Text(
-                _isProcessing ? "ROBOT SEDANG BEKERJA..." : "MULAI PROSES VIDEO",
+                _isProcessing ? "ROBOT SEDANG BEKERJA..." : "MULAI ANALISIS AI",
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
               ),
             )
