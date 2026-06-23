@@ -32,7 +32,7 @@ jobs:
         sed -i 's/minSdkVersion .*/minSdkVersion 24/g' android/app/build.gradle
         sed -i 's/flutter.minSdkVersion/24/g' android/app/build.gradle || true
         
-        # 2. Upgrade Versi Gradle Otomatis ke 8.4 sesuai instruksi error
+        # 2. Upgrade Versi Gradle Otomatis ke 8.4 sesuai instruksi error sebelumnya
         sed -i 's/gradle-7.6.3-all.zip/gradle-8.4-all.zip/g' android/gradle/wrapper/gradle-wrapper.properties || true
         sed -i 's/gradle-.*-all.zip/gradle-8.4-all.zip/g' android/gradle/wrapper/gradle-wrapper.properties || true
 
@@ -68,7 +68,7 @@ jobs:
         include ":app"
         EOF
 
-        # 4. Tulis ulang file android/build.gradle dan kunci kompilasi Java ke versi 17 agar selaras dengan Kotlin
+        # 4. Tulis ulang file android/build.gradle dengan struktur bersih dan fleksibel untuk semua sub-project
         cat << 'EOF' > android/build.gradle
         allprojects {
             repositories {
@@ -85,18 +85,6 @@ jobs:
         rootProject.buildDir = '../build'
         subprojects {
             project.buildDir = "${rootProject.buildDir}/${project.name}"
-            
-            // Mengunci Java tingkat sub-project ke Java 17
-            afterEvaluate { project ->
-                if (project.hasProperty('android')) {
-                    project.android {
-                        compileOptions {
-                            sourceCompatibility JavaVersion.VERSION_17
-                            targetCompatibility JavaVersion.VERSION_17
-                        }
-                    }
-                }
-            }
         }
         subprojects {
             project.evaluationDependsOn(':app')
