@@ -11,53 +11,26 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Setup Java
+    - name: Setup Java (Mundur ke Java 11 agar cocok dengan FFmpeg)
       uses: actions/setup-java@v4
       with:
         distribution: 'zulu'
-        java-version: '17'
+        java-version: '11'
 
-    - name: Setup Flutter
+    - name: Setup Flutter (Versi Emas 3.16.9)
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.22.x'
+        flutter-version: '3.16.9'
         channel: 'stable'
 
-    - name: Regenerasi Folder Android (Pondasi Bersih)
+    - name: Buat Pondasi Android Super Bersih
       run: |
-        # Buang sisa-sisa error lama dan buat pondasi Android baru
+        # Buang semua file lama dan buat baru dengan mesin Flutter 3.16
         rm -rf android
         flutter create . --platforms=android --org com.example
         
-        # Suntikkan syarat mutlak FFmpeg (SDK 24) lewat jalur legal
+        # Atur syarat wajib FFmpeg (SDK 24)
         echo "flutter.minSdkVersion=24" >> android/local.properties
-        echo "flutter.targetSdkVersion=34" >> android/local.properties
-        echo "flutter.compileSdkVersion=34" >> android/local.properties
-
-    - name: Kunci Master Repositori (Bypass Total Keamanan Gradle)
-      run: |
-        # 1. Matikan sistem pemblokir unduhan bawaan Flutter 3.22
-        sed -i 's/FAIL_ON_PROJECT_REPOS/PREFER_PROJECT/g' android/settings.gradle || true
-        sed -i 's/PREFER_SETTINGS/PREFER_PROJECT/g' android/settings.gradle || true
-        
-        # 2. Tanamkan "Kunci Master" ke otak server GitHub agar MEMAKSA unduh FFmpeg
-        mkdir -p ~/.gradle
-        cat << 'EOF' > ~/.gradle/init.gradle
-        allprojects {
-            buildscript {
-                repositories {
-                    google()
-                    mavenCentral()
-                    maven { url 'https://jitpack.io' }
-                }
-            }
-            repositories {
-                google()
-                mavenCentral()
-                maven { url 'https://jitpack.io' }
-            }
-        }
-        EOF
 
     - name: Ambil Dependency Proyek
       run: flutter pub get
