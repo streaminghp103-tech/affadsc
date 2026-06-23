@@ -26,11 +26,16 @@ jobs:
     - name: Generate Folder Android Otomatis
       run: flutter create . --platforms=android
 
-    - name: Naikkan Batas Minimum Android SDK ke 24 (Perbaikan Bug FFmpeg)
+    - name: Perbaiki Jalur Unduhan Maven & Batas SDK (Fix FFmpeg Bug)
       run: |
+        # 1. Paksa sistem Android menggunakan SDK minimal 24
         sed -i 's/minSdkVersion .*/minSdkVersion 24/g' android/app/build.gradle
         sed -i 's/minSdkVersion = .*/minSdkVersion = 24/g' android/local.properties || true
         sed -i 's/flutter.minSdkVersion/24/g' android/app/build.gradle || true
+        
+        # 2. Suntikkan mavenCentral() ke semua file build.gradle agar FFmpeg bisa terunduh
+        sed -i 's/google()/google(); mavenCentral()/g' android/build.gradle
+        sed -i 's/google()/google(); mavenCentral()/g' android/app/build.gradle
 
     - name: Ambil Dependency Proyek
       run: flutter pub get
