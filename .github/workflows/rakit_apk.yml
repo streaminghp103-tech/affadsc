@@ -25,17 +25,20 @@ jobs:
 
     - name: Buat Struktur Proyek Baru & Bersih
       run: |
-        # Hapus folder android lama yang korup akibat modifikasi teks sebelumnya
         rm -rf android
-        # Buat ulang folder Android resmi yang fresh dengan package name com.example.affadsc
         flutter create . --platforms=android --org com.example
 
-    - name: Konfigurasi Parameter SDK (Fix FFmpeg Tanpa Merusak File)
+    - name: Suntik Konfigurasi SDK & Buka Gerbang Maven (Anti-Error)
       run: |
-        # Mengubah setelan minSdk secara legal langsung ke file local.properties atau gradle bawaan Flutter
+        # 1. Atur minimum SDK ke 24 via file properties (Sangat Aman & Legal)
         echo "flutter.minSdkVersion=24" >> android/local.properties
         echo "flutter.targetSdkVersion=34" >> android/local.properties
         echo "flutter.compileSdkVersion=34" >> android/local.properties
+        
+        # 2. Tambahkan pelacak mavenCentral di bagian paling bawah file konfigurasi utama
+        # Ini mengatasi gagal unduh FFmpeg tanpa menyenggol sedikit pun struktur Java/Kotlin di atasnya
+        echo "" >> android/build.gradle
+        echo "allprojects { repositories { google(); mavenCentral() } }" >> android/build.gradle
 
     - name: Ambil Dependency Proyek
       run: flutter pub get
