@@ -32,7 +32,11 @@ jobs:
         sed -i 's/minSdkVersion .*/minSdkVersion 24/g' android/app/build.gradle
         sed -i 's/flutter.minSdkVersion/24/g' android/app/build.gradle || true
         
-        # 2. Tulis ulang file android/settings.gradle secara total dengan format Plugin baru + Jalur Maven
+        # 2. Upgrade Versi Gradle Otomatis ke 8.4 sesuai instruksi error
+        sed -i 's/gradle-7.6.3-all.zip/gradle-8.4-all.zip/g' android/gradle/wrapper/gradle-wrapper.properties || true
+        sed -i 's/gradle-.*-all.zip/gradle-8.4-all.zip/g' android/gradle/wrapper/gradle-wrapper.properties || true
+
+        # 3. Tulis ulang file android/settings.gradle secara total dengan format Plugin baru + Jalur Maven
         cat << 'EOF' > android/settings.gradle
         pluginManagement {
             def flutterSdkPath = {
@@ -64,7 +68,7 @@ jobs:
         include ":app"
         EOF
 
-        # 3. Tulis ulang file android/build.gradle secara total agar server mavenCentral diprioritaskan
+        # 4. Tulis ulang file android/build.gradle secara total agar server mavenCentral diprioritaskan
         cat << 'EOF' > android/build.gradle
         allprojects {
             repositories {
