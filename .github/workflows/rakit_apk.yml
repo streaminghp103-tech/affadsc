@@ -24,7 +24,13 @@ jobs:
         channel: 'stable'
 
     - name: Generate Folder Android Otomatis
-      run: flutter create . --platforms=android # Perintah wajib agar folder Android terbuat dengan sempurna
+      run: flutter create . --platforms=android
+
+    - name: Naikkan Batas Minimum Android SDK ke 24 (Perbaikan Bug FFmpeg)
+      run: |
+        sed -i 's/minSdkVersion .*/minSdkVersion 24/g' android/app/build.gradle
+        sed -i 's/minSdkVersion = .*/minSdkVersion = 24/g' android/local.properties || true
+        sed -i 's/flutter.minSdkVersion/24/g' android/app/build.gradle || true
 
     - name: Ambil Dependency Proyek
       run: flutter pub get
