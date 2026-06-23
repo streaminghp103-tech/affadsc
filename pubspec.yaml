@@ -9,7 +9,7 @@ dependencies:
   flutter:
     sdk: flutter
   google_generative_ai: ^0.4.0
-  ffmpeg_kit_flutter: ^6.0.3
+  ffmpeg_kit_flutter_video: ^6.0.3 # Diubah ke varian video agar aman di Android
   file_picker: ^8.0.0
 
 flutter:
