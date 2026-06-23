@@ -26,7 +26,7 @@ jobs:
     - name: Generate Folder Android Otomatis
       run: flutter create . --platforms=android
 
-    - name: Kunci Total Pengaturan Android & Jalur FFmpeg (Anti Gagal)
+    - name: Kunci Total Pengaturan Android & Jalur JVM Java 17 (Anti Gagal)
       run: |
         # 1. Atur minSdkVersion ke 24 secara paksa di level aplikasi
         sed -i 's/minSdkVersion .*/minSdkVersion 24/g' android/app/build.gradle
@@ -68,18 +68,35 @@ jobs:
         include ":app"
         EOF
 
-        # 4. Tulis ulang file android/build.gradle secara total agar server mavenCentral diprioritaskan
+        # 4. Tulis ulang file android/build.gradle dan kunci kompilasi Java ke versi 17 agar selaras dengan Kotlin
         cat << 'EOF' > android/build.gradle
         allprojects {
             repositories {
                 google()
                 mavenCentral()
             }
+            tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+                kotlinOptions {
+                    jvmTarget = "17"
+                }
+            }
         }
 
         rootProject.buildDir = '../build'
         subprojects {
             project.buildDir = "${rootProject.buildDir}/${project.name}"
+            
+            // Mengunci Java tingkat sub-project ke Java 17
+            afterEvaluate { project ->
+                if (project.hasProperty('android')) {
+                    project.android {
+                        compileOptions {
+                            sourceCompatibility JavaVersion.VERSION_17
+                            targetCompatibility JavaVersion.VERSION_17
+                        }
+                    }
+                }
+            }
         }
         subprojects {
             project.evaluationDependsOn(':app')
