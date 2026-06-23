@@ -26,32 +26,48 @@ jobs:
     - name: Generate Folder Android Otomatis
       run: flutter create . --platforms=android
 
-    - name: Suntik Konfigurasi Maven & SDK (Solusi Kunci FFmpeg)
+    - name: Suntik Batas SDK & Server Unduhan (Solusi Akurat FFmpeg)
       run: |
-        # 1. Paksa sistem menggunakan minSdkVersion 24 di build.gradle utama aplikasi
+        # 1. Pastikan batas minimum Android SDK diatur ke 24
         sed -i 's/minSdkVersion .*/minSdkVersion 24/g' android/app/build.gradle
         sed -i 's/flutter.minSdkVersion/24/g' android/app/build.gradle || true
         
-        # 2. Tulis ulang file android/build.gradle secara total agar server mavenCentral() diprioritaskan
-        cat << 'EOF' > android/build.gradle
-        allprojects {
+        # 2. Tambahkan mavenCentral() ke dalam settings.gradle agar plugin bisa mengunduh FFmpeg
+        cat << 'EOF' > android/settings.gradle
+        pluginManagement {
+            def flutterSdkPath = {
+                def properties = new Properties()
+                def file = new File(settingsDir, "local.properties")
+                if (file.exists()) {
+                    file.withReader("UTF-8") { reader -> properties.load(reader) }
+                }
+                def sdkPath = properties.getProperty("flutter.sdk")
+                assert sdkPath != null, "flutter.sdk not set in local.properties"
+                return sdkPath
+            }()
+
+            includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
+
+            repositories {
+                google()
+                mavenCentral()
+                gradlePluginPortal()
+            }
+        }
+
+        plugins {
+            id "dev.flutter.flutter-gradle-plugin" version "1.0.0" apply false
+        }
+
+        dependencyResolutionManagement {
+            repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
             repositories {
                 google()
                 mavenCentral()
             }
         }
 
-        rootProject.buildDir = '../build'
-        subprojects {
-            project.buildDir = "${rootProject.buildDir}/${project.name}"
-        }
-        subprojects {
-            project.evaluationDependsOn(':app')
-        }
-
-        tasks.register("clean", Delete) {
-            delete rootProject.buildDir
-        }
+        include ":app"
         EOF
 
     - name: Ambil Dependency Proyek
