@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_video/ffmpeg_kit.dart'; // Diperbarui sesuai pubspec
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:io';
 import 'dart:convert';
 
 void main() => runApp(MaterialApp(
-      theme: ThemeData.dark(), // Tema gelap modern (Cyberpunk/Pro)
+      theme: ThemeData.dark(),
       home: AutoAffiliateAndroid(),
     ));
 
@@ -55,14 +55,12 @@ class _AutoAffiliateAndroidState extends State<AutoAffiliateAndroid> {
       
       final response = await model.generateContent([Content.multi([prompt, videoPart])]);
       
-      final dataAi = jsonDecode(response.text!.replaceAll("```json", "").replaceAll("```", "").strip());
+      final dataAi = jsonDecode(response.text!.replaceAll("```json", "").replaceAll("```", "").trim());
       String judulSEO = dataAi['judul'];
       
       setState(() => _statusLog = "AI Selesai menganalisis! Memulai proses rendering video...");
 
-      // Memulai proses editing via FFmpeg internal Android
       String outputPath = _selectedVideoPath!.replaceAll(".mp4", "_matang_SEO.mp4");
-      // Perintah: Mirroring (hflip), Percepat visual (setpts), Buang suara asli Mandarin (-an)
       String ffmpegCommand = "-i $_selectedVideoPath -vf \"hflip,setpts=0.95*PTS\" -an -ss 00:00:00.5 $outputPath";
 
       await FFmpegKit.execute(ffmpegCommand).then((session) async {
